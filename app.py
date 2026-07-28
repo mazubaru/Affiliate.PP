@@ -24,7 +24,7 @@ if not check_password():
 
 # เชื่อมต่อ Supabase และ Gemini จาก st.secrets
 supabase: Client = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 if st.button("🔍 ตรวจสอบการเชื่อมต่อ Gemini API"):
     try:
         st.write("โมเดลที่คุณสามารถใช้งานได้มีดังนี้:")
