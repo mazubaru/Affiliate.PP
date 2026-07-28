@@ -1,16 +1,20 @@
+จัดให้ครับ! นี่คือโค้ดไฟล์ app.py ฉบับอัปเดตล่าสุดที่ปรับแก้การเรียกใช้ไลบรารี google-genai แบบใหม่เรียบร้อยแล้ว (ไม่มีคำสั่ง configure มากวนใจ และรองรับ gemini-2.0-flash เต็มรูปแบบ)
+
+คุณสามารถก๊อปปี้โค้ดตั้งแต่บรรทัดแรก ไปจนจบส่วนของฟังก์ชันสร้างแคปชัน แล้วนำไปทับโค้ดเดิมในไฟล์ app.py ได้เลยครับ:
+
+Python
 import streamlit as st
 from google import genai
 from supabase import create_client, Client
 import datetime
 
-# --- 1. ตั้งค่าความปลอดภัย & เชื่อมต่อ Services ---
-# ระบบ Login อย่างง่าย
+# --- 1. ตั้งค่าความปลอดภัย & ระบบ Login ---
 def check_password():
     if "password_correct" not in st.session_state:
         st.session_state["password_correct"] = False
 
     if not st.session_state["password_correct"]:
-        st.text_input("รหัสผ่าน (Password)", type="password", key="pwd")
+        st.text_input("รหัสผ่าน (Password) เพื่อเข้าใช้งาน", type="password", key="pwd")
         if st.session_state["pwd"] == st.secrets["APP_PASSWORD"]:
             st.session_state["password_correct"] = True
             st.rerun()
@@ -19,25 +23,21 @@ def check_password():
         return False
     return True
 
+# บังคับให้ล็อกอินก่อน ถ้ายังไม่ล็อกอิน โค้ดด้านล่างจะไม่ทำงาน
 if not check_password():
     st.stop()
 
-# เชื่อมต่อ Supabase และ Gemini จาก st.secrets
+
+# --- 2. เชื่อมต่อ Services (Supabase & Gemini) ---
+
+# 2.1 เชื่อมต่อ Database (Supabase)
 supabase: Client = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-if st.button("🔍 ตรวจสอบการเชื่อมต่อ Gemini API"):
-    try:
-        st.write("โมเดลที่คุณสามารถใช้งานได้มีดังนี้:")
-        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        st.write(models)
-        st.success("✅ เชื่อมต่อ API สำเร็จ!")
-    except Exception as e:
-        st.error(f"❌ เชื่อมต่อไม่ได้ Error: {e}")
-model = genai.GenerativeModel('gemini-1.5-flash') # ใช้ 1.5 flash จะเร็วและถูกมาก
 
-# --- 2. ฟังก์ชัน AI สร้างแคปชัน ---
+# 2.2 เชื่อมต่อ Gemini API (ใช้ไลบรารีใหม่ google-genai)
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
+
+# --- 3. ฟังก์ชัน AI สร้างแคปชัน ---
 def generate_captions(product_name, product_link, provider="gemini"):
     prompt = f"""
     คุณคือนักการตลาด Affiliate มืออาชีพ ช่วยเขียนแคปชันขายสินค้าชื่อ: "{product_name}" 
@@ -51,13 +51,18 @@ def generate_captions(product_name, product_link, provider="gemini"):
     
     ตอบกลับมาโดยแยกหัวข้อชัดเจน
     """
+    
     if provider == "gemini":
-        # ใช้คำสั่งใหม่ของ google-genai
-        response = client.models.generate_content(
-            model='gemini-2.0-flash', # แนะนำให้ใช้ตัว 2.0-flash ไปเลยครับ เก่งและถูกมาก!
-            contents=prompt,
-        )
-        return response.text
+        try:
+            # ใช้คำสั่ง generate_content แบบใหม่
+            response = client.models.generate_content(
+                model='gemini-2.0-flash', # ใช้รุ่น 2.0 Flash เก่งและราคาถูกมาก
+                contents=prompt
+            )
+            return response.text
+        except Exception as e:
+            return f"❌ เกิดข้อผิดพลาดจาก API: {e}"
+            
     return "API Provider not supported yet."
 
 # --- 3. หน้าจอ UI (Streamlit) ---
