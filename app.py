@@ -30,7 +30,7 @@ supabase: Client = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABAS
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 # ตั้งค่าชื่อโมเดลที่คุณรันผ่าน (ถ้า 3.5-flash เวิร์ก สามารถเปลี่ยนเป็นชื่อนั้นได้เลยครับ)
-model = genai.GenerativeModel('gemini-1.5-flash') 
+model = genai.GenerativeModel('gemini-3.0-flash') 
 
 
 # --- 3. ฟังก์ชัน AI สร้างแคปชัน ---
