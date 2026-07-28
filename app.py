@@ -33,7 +33,7 @@ if st.button("🔍 ตรวจสอบการเชื่อมต่อ Gem
         st.success("✅ เชื่อมต่อ API สำเร็จ!")
     except Exception as e:
         st.error(f"❌ เชื่อมต่อไม่ได้ Error: {e}")
-model = genai.GenerativeModel('gemini-1.5-flash') # ใช้ 1.5 flash จะเร็วและถูกมาก
+model = genai.GenerativeModel('gemini-2.0-flash') # ใช้ 1.5 flash จะเร็วและถูกมาก
 
 # --- 2. ฟังก์ชัน AI สร้างแคปชัน ---
 def generate_captions(product_name, product_link, provider="gemini"):
