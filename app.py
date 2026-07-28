@@ -2,6 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 from supabase import create_client, Client
 import datetime
+
 from datetime import timezone, timedelta
 TH_TIMEZONE = timezone(timedelta(hours=7))
 # --- 1. ตั้งค่าความปลอดภัย & ระบบ Login ---
@@ -93,9 +94,12 @@ if 'captions' in st.session_state:
         post_time = st.time_input("เวลาที่ต้องการโพสต์")
     
     # ปุ่มบันทึกลงคิวโพสต์ (ส่งเฉพาะข้อความและลิงก์เข้า Supabase)
-    if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
-        # --- แปลงเวลาท้องถิ่น (ไทย GMT+7) ให้เป็น UTC มาตรฐานสากลก่อนบันทึก ---
+if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
+        # 1. นำวันที่และเวลาที่เลือกบนเว็บ มาผูกกับโซนเวลาไทย (GMT+7)
         local_dt = datetime.datetime.combine(post_date, post_time).replace(tzinfo=TH_TIMEZONE)
+        
+        # 2. แปลงเวลาไทยให้เป็นเวลามาตรฐานสากล (UTC) ซึ่งจะถูกหักออกไป 7 ชั่วโมงพอดี
+        # (เพื่อให้เวลาใน Supabase ตรงกับเวลามาตรฐานที่หุ่นยนต์ใช้เช็ก)
         utc_dt = local_dt.astimezone(timezone.utc)
         schedule_datetime = utc_dt.isoformat()
         
@@ -107,7 +111,7 @@ if 'captions' in st.session_state:
                     "product_name": product_name,
                     "content": edited_caption,
                     "image_url": "", 
-                    "schedule_time": schedule_datetime, # เวลาที่แปลงเป็น UTC แล้ว
+                    "schedule_time": schedule_datetime, # บันทึกเวลาแบบ UTC ที่ถูกต้องแล้ว
                     "status": "pending"
                 }
                 
@@ -115,7 +119,8 @@ if 'captions' in st.session_state:
                 supabase.table("scheduled_posts").insert(data_to_insert).execute()
                 
             st.success("✅ บันทึกลงคิวเรียบร้อย!")
-            del st.session_state['captions']
-            
+            if 'captions' in st.session_state:
+                del st.session_state['captions']
+                
         except Exception as e:
             st.error(f"❌ เกิดข้อผิดพลาดจากฐานข้อมูล: {e}")
