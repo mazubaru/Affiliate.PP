@@ -95,13 +95,10 @@ if 'captions' in st.session_state:
     
     # ปุ่มบันทึกลงคิวโพสต์ (ส่งเฉพาะข้อความและลิงก์เข้า Supabase)
 if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
-        # 1. รวมวันที่และเวลาที่เลือกบนเว็บเข้าด้วยกัน
+        # 1. เอาวันที่และเวลาที่เลือกบนหน้าเว็บ มาต่อกันเป็นตัวอักษรแบบตรงๆ (Local Time)
+        # วิธีนี้จะไม่แอบบวก 7 ชั่วโมงให้ ทำให้เลือกกี่โมง ได้ค่านั้นเป๊ะๆ ครับ
         selected_dt = datetime.datetime.combine(post_date, post_time)
-        
-        # 2. "บวกเพิ่ม 7 ชั่วโมง" เข้าไปตรงๆ เพื่อชดเชยที่ Supabase จะดึงหรือแสดงผลแบบ UTC
-        # วิธีนี้จะทำให้เวลาใน Supabase ตรงกับเวลาที่คุณเลือกบนหน้าเว็บ Streamlit เป๊ะๆ ครับ
-        adjusted_dt = selected_dt + datetime.timedelta(hours=7)
-        schedule_datetime = adjusted_dt.isoformat()
+        schedule_datetime = selected_dt.isoformat()
         
         try:
             with st.spinner("กำลังบันทึกข้อมูลลงฐานข้อมูล..."):
@@ -111,7 +108,7 @@ if st.button("🚀 อนุมัติและบันทึกลงคิ�
                     "product_name": product_name,
                     "content": edited_caption,
                     "image_url": "", 
-                    "schedule_time": schedule_datetime, # บันทึกเวลาที่บวกชดเชยแล้ว
+                    "schedule_time": schedule_datetime, # บันทึกเวลาตรงๆ ตามที่เลือกบนเว็บ
                     "status": "pending"
                 }
                 
