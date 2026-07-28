@@ -1,7 +1,7 @@
 import os
 import requests
 from supabase import create_client, Client
-from datetime import datetime, timezone
+from datetime import datetime
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
@@ -9,13 +9,12 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 if not all([SUPABASE_URL, SUPABASE_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID]):
-    print("⚠️ ข้อผิดพลาด: หา API Key ไม่ครบ โปรดตรวจสอบ Environment Variables")
+    print("⚠️ ข้อผิดพลาด: หา API Key ไม่ครบ")
     exit()
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def post_to_telegram(caption):
-    """ส่งเฉพาะข้อความเข้า Telegram"""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
@@ -26,8 +25,8 @@ def post_to_telegram(caption):
     return response
 
 def process_queue():
-    TH_TIMEZONE = datetime.now().astimezone().tzinfo # หรือใช้โซนเวลาไทย
-    # เพื่อความชัวร์ ใช้เวลาปัจจุบันของเครื่องแบบตรงๆ ได้เลยครับ:
+    # ใช้เวลาปัจจุบันของเครื่องแบบ Local ตรงๆ (ไม่มีการบวก/ลบ หรือแปลง Timezone ซับซ้อน)
+    # วิธีนี้จะตรงกับเวลาที่คุณเลือกบนหน้าเว็บ Streamlit และตรงกับที่แสดงใน Supabase ทุกประการครับ
     now = datetime.now().isoformat()
     print(f"🔍 เริ่มตรวจสอบคิวโพสต์ ณ เวลา: {now}")
     
