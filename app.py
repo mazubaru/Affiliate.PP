@@ -95,24 +95,28 @@ if 'captions' in st.session_state:
     
     # ปุ่มบันทึกลงคิวโพสต์ (ส่งเฉพาะข้อความและลิงก์เข้า Supabase)
 if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
-        # 1. เอาวันที่และเวลาที่เลือกบนหน้าเว็บ มาต่อกันเป็นตัวอักษรแบบตรงๆ (Local Time)
-        # วิธีนี้จะไม่แอบบวก 7 ชั่วโมงให้ ทำให้เลือกกี่โมง ได้ค่านั้นเป๊ะๆ ครับ
-        selected_dt = datetime.datetime.combine(post_date, post_time)
-        schedule_datetime = selected_dt.isoformat()
+        # 1. นำวันที่และเวลาที่เลือกบนเว็บ มาผูกกับโซนเวลาประเทศไทย (+07:00) โดยตรง
+        from datetime import timezone, timedelta
+        TH_TZ = timezone(timedelta(hours=7))
+        
+        # สร้างตัวแปรเวลาพร้อมระบุ Timezone ไทย
+        local_dt = datetime.datetime.combine(post_date, post_time).replace(tzinfo=TH_TZ)
+        
+        # แปลงเป็นข้อความรูปแบบ ISO พร้อมส่งเครื่องหมาย +07:00 ไปด้วย 
+        # (วิธีนี้จะทำให้ Supabase รู้ทันทีว่าเป็นเวลาของประเทศไทย และจะแสดงผลในตารางตรงกับที่คุณเลือกเป๊ะๆ ครับ)
+        schedule_datetime = local_dt.isoformat()
         
         try:
             with st.spinner("กำลังบันทึกข้อมูลลงฐานข้อมูล..."):
                 
-                # ข้อมูลที่จะบันทึกลงตาราง scheduled_posts
                 data_to_insert = {
                     "product_name": product_name,
                     "content": edited_caption,
                     "image_url": "", 
-                    "schedule_time": schedule_datetime, # บันทึกเวลาตรงๆ ตามที่เลือกบนเว็บ
+                    "schedule_time": schedule_datetime, # ส่งเวลาที่มี +07:00 ไปด้วย
                     "status": "pending"
                 }
                 
-                # สั่งบันทึกลง Supabase
                 supabase.table("scheduled_posts").insert(data_to_insert).execute()
                 
             st.success("✅ บันทึกลงคิวเรียบร้อย!")
