@@ -26,7 +26,9 @@ def post_to_telegram(caption):
     return response
 
 def process_queue():
-    now = datetime.now(timezone.utc).isoformat()
+    TH_TIMEZONE = datetime.now().astimezone().tzinfo # หรือใช้โซนเวลาไทย
+    # เพื่อความชัวร์ ใช้เวลาปัจจุบันของเครื่องแบบตรงๆ ได้เลยครับ:
+    now = datetime.now().isoformat()
     print(f"🔍 เริ่มตรวจสอบคิวโพสต์ ณ เวลา: {now}")
     
     try:
