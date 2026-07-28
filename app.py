@@ -1,8 +1,3 @@
-จัดให้ครับ! นี่คือโค้ดไฟล์ app.py ฉบับอัปเดตล่าสุดที่ปรับแก้การเรียกใช้ไลบรารี google-genai แบบใหม่เรียบร้อยแล้ว (ไม่มีคำสั่ง configure มากวนใจ และรองรับ gemini-2.0-flash เต็มรูปแบบ)
-
-คุณสามารถก๊อปปี้โค้ดตั้งแต่บรรทัดแรก ไปจนจบส่วนของฟังก์ชันสร้างแคปชัน แล้วนำไปทับโค้ดเดิมในไฟล์ app.py ได้เลยครับ:
-
-Python
 import streamlit as st
 from google import genai
 from supabase import create_client, Client
