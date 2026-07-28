@@ -70,51 +70,48 @@ with col2:
     
 image_url = st.text_input("ลิงก์รูปภาพสินค้า (หรือจะต่อยอดให้อัปโหลดไฟล์ก็ได้)")
 
-if st.button("✨ เจนแคปชันด้วย AI (Gemini)"):
+# ปุ่มสั่งให้ AI เจนแคปชัน (ตัดส่วนอัปโหลดรูปออกเรียบร้อย)
+if st.button("✨ เจนแคปชันด้วย AI"):
     if product_name and product_link:
         with st.spinner("AI กำลังคิดแคปชัน..."):
             captions = generate_captions(product_name, product_link)
             st.session_state['captions'] = captions
             st.success("สร้างแคปชันสำเร็จ!")
     else:
-        st.warning("กรุณาใส่ชื่อสินค้าและลิงก์")
+        st.warning("กรุณาใส่ชื่อสินค้าและลิงก์ก่อนกดเจน")
 
+# เมื่อเจนแคปชันเสร็จแล้ว จะแสดงกล่องให้แก้ไขและเลือกเวลาโพสต์
 if 'captions' in st.session_state:
     st.markdown("### 📝 ตรวจสอบและแก้ไขแคปชัน")
-    edited_caption = st.text_area("แก้ไขข้อความก่อนโพสต์ได้ที่นี่", value=st.session_state['captions'], height=300)
+    edited_caption = st.text_area("แก้ไขข้อความก่อนโพสต์", value=st.session_state['captions'], height=250)
     
-    post_date = st.date_input("วันที่ต้องการโพสต์", min_value=datetime.date.today())
-    post_time = st.time_input("เวลาที่ต้องการโพสต์")
+    col_date, col_time = st.columns(2)
+    with col_date:
+        post_date = st.date_input("วันที่ต้องการโพสต์", min_value=datetime.date.today())
+    with col_time:
+        post_time = st.time_input("เวลาที่ต้องการโพสต์")
     
+    # ปุ่มบันทึกลงคิวโพสต์ (ส่งเฉพาะข้อความและลิงก์เข้า Supabase)
     if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
         schedule_datetime = datetime.datetime.combine(post_date, post_time).isoformat()
         
         try:
-            with st.spinner("กำลังบันทึกข้อมูลและอัปโหลดรูปภาพ..."):
-                # 1. จัดการอัปโหลดรูปภาพ (ถ้ามี)
-                if uploaded_file is not None:
-                    file_bytes = uploaded_file.getvalue()
-                    file_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{uploaded_file.name}"
-                    supabase.storage.from_("product-images").upload(file_name, file_bytes)
-                    image_url = supabase.storage.from_("product-images").get_public_url(file_name)
-                else:
-                    image_url = ""
+            with st.spinner("กำลังบันทึกข้อมูลลงฐานข้อมูล..."):
                 
-                # 2. จัดเตรียมข้อมูลที่จะบันทึก (Data Payload)
+                # ข้อมูลที่จะบันทึกลงตาราง scheduled_posts (ไม่มีรูปภาพ)
                 data_to_insert = {
                     "product_name": product_name,
                     "content": edited_caption,
-                    "image_url": image_url,
+                    "image_url": "", # ส่งค่าว่างไว้ก่อน
                     "schedule_time": schedule_datetime,
                     "status": "pending"
                 }
                 
-                # 3. คำสั่ง Insert ที่เขียนแบบปลอดภัยและเคลียร์ที่สุด
-                response = supabase.table("scheduled_posts").insert(data_to_insert).execute()
+                # สั่งบันทึกลง Supabase
+                supabase.table("scheduled_posts").insert(data_to_insert).execute()
                 
             st.success("✅ บันทึกลงคิวเรียบร้อย!")
-            if 'captions' in st.session_state:
-                del st.session_state['captions']
-                
+            del st.session_state['captions']
+            
         except Exception as e:
             st.error(f"❌ เกิดข้อผิดพลาดจากฐานข้อมูล: {e}")
