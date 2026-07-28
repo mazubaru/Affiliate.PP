@@ -95,12 +95,15 @@ if 'captions' in st.session_state:
     
     # ปุ่มบันทึกลงคิวโพสต์ (ส่งเฉพาะข้อความและลิงก์เข้า Supabase)
 if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
-        # 1. ดึงวันที่และเวลาที่เลือกบนหน้าเว็บ
-        selected_dt = datetime.datetime.combine(post_date, post_time)
+        from datetime import timezone, timedelta
         
-        # 2. "บวกเพิ่ม 7 ชั่วโมง" (+7) เข้าไปชดเชยที่ระบบหลังบ้านจะหักออก
-        adjusted_dt = selected_dt + datetime.timedelta(hours=7)
-        schedule_datetime = adjusted_dt.isoformat()
+        # กำหนดว่าเวลาที่คุณเลือกบนเว็บคือเวลาไทย (GMT+7)
+        TH_TZ = timezone(timedelta(hours=7))
+        local_dt = datetime.datetime.combine(post_date, post_time).replace(tzinfo=TH_TZ)
+        
+        # แปลงเป็นเวลาสากล (UTC) ทันือก่อนบันทึก
+        utc_dt = local_dt.astimezone(timezone.utc)
+        schedule_datetime = utc_dt.isoformat()
         
         try:
             with st.spinner("กำลังบันทึกข้อมูลลงฐานข้อมูล..."):
@@ -108,7 +111,7 @@ if st.button("🚀 อนุมัติและบันทึกลงคิ�
                     "product_name": product_name,
                     "content": edited_caption,
                     "image_url": "", 
-                    "schedule_time": schedule_datetime, # บันทึกเวลาที่บวกชดเชยแล้ว
+                    "schedule_time": schedule_datetime,
                     "status": "pending"
                 }
                 supabase.table("scheduled_posts").insert(data_to_insert).execute()
