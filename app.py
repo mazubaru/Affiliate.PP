@@ -51,7 +51,7 @@ def generate_captions(product_name, product_link, provider="gemini"):
         try:
             # ใช้คำสั่ง generate_content แบบใหม่
             response = client.models.generate_content(
-                model='gemini-2.0-flash', # ใช้รุ่น 2.0 Flash เก่งและราคาถูกมาก
+                model='gemini-1.5-flash'
                 contents=prompt
             )
             return response.text
