@@ -95,13 +95,13 @@ if 'captions' in st.session_state:
     
     # ปุ่มบันทึกลงคิวโพสต์ (ส่งเฉพาะข้อความและลิงก์เข้า Supabase)
 if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
-        # 1. นำวันที่และเวลาที่เลือกบนเว็บ มาผูกกับโซนเวลาไทย (GMT+7)
-        local_dt = datetime.datetime.combine(post_date, post_time).replace(tzinfo=TH_TIMEZONE)
+        # 1. รวมวันที่และเวลาที่เลือกบนเว็บเข้าด้วยกัน
+        selected_dt = datetime.datetime.combine(post_date, post_time)
         
-        # 2. แปลงเวลาไทยให้เป็นเวลามาตรฐานสากล (UTC) ซึ่งจะถูกหักออกไป 7 ชั่วโมงพอดี
-        # (เพื่อให้เวลาใน Supabase ตรงกับเวลามาตรฐานที่หุ่นยนต์ใช้เช็ก)
-        utc_dt = local_dt.astimezone(timezone.utc)
-        schedule_datetime = utc_dt.isoformat()
+        # 2. "บวกเพิ่ม 7 ชั่วโมง" เข้าไปตรงๆ เพื่อชดเชยที่ Supabase จะดึงหรือแสดงผลแบบ UTC
+        # วิธีนี้จะทำให้เวลาใน Supabase ตรงกับเวลาที่คุณเลือกบนหน้าเว็บ Streamlit เป๊ะๆ ครับ
+        adjusted_dt = selected_dt + datetime.timedelta(hours=7)
+        schedule_datetime = adjusted_dt.isoformat()
         
         try:
             with st.spinner("กำลังบันทึกข้อมูลลงฐานข้อมูล..."):
@@ -111,7 +111,7 @@ if st.button("🚀 อนุมัติและบันทึกลงคิ�
                     "product_name": product_name,
                     "content": edited_caption,
                     "image_url": "", 
-                    "schedule_time": schedule_datetime, # บันทึกเวลาแบบ UTC ที่ถูกต้องแล้ว
+                    "schedule_time": schedule_datetime, # บันทึกเวลาที่บวกชดเชยแล้ว
                     "status": "pending"
                 }
                 
