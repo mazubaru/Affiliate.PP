@@ -1,5 +1,5 @@
 import streamlit as st
-from google import genai
+import google.generativeai as genai
 from supabase import create_client, Client
 import datetime
 
@@ -18,18 +18,19 @@ def check_password():
         return False
     return True
 
-# บังคับให้ล็อกอินก่อน ถ้ายังไม่ล็อกอิน โค้ดด้านล่างจะไม่ทำงาน
 if not check_password():
     st.stop()
 
+# --- 2. เชื่อมต่อ Services (Supabase & Gemini แบบดั้งเดิม) ---
 
-# --- 2. เชื่อมต่อ Services (Supabase & Gemini) ---
-
-# 2.1 เชื่อมต่อ Database (Supabase)
+# เชื่อมต่อ Database (Supabase)
 supabase: Client = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 
-# 2.2 เชื่อมต่อ Gemini API (ใช้ไลบรารีใหม่ google-genai)
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+# เชื่อมต่อ Gemini API (ใช้ไลบรารี google-generativeai)
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+
+# ตั้งค่าชื่อโมเดลที่คุณรันผ่าน (ถ้า 3.5-flash เวิร์ก สามารถเปลี่ยนเป็นชื่อนั้นได้เลยครับ)
+model = genai.GenerativeModel('gemini-1.5-flash') 
 
 
 # --- 3. ฟังก์ชัน AI สร้างแคปชัน ---
@@ -49,11 +50,8 @@ def generate_captions(product_name, product_link, provider="gemini"):
     
     if provider == "gemini":
         try:
-            # ใช้คำสั่ง generate_content แบบใหม่
-            rresponse = client.models.generate_content(
-            model='gemini-1.5-flash-8b',
-            contents=prompt
-            )
+            # ใช้คำสั่ง generate_content ของเวอร์ชันดั้งเดิม
+            response = model.generate_content(prompt)
             return response.text
         except Exception as e:
             return f"❌ เกิดข้อผิดพลาดจาก API: {e}"
