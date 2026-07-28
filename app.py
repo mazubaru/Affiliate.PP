@@ -89,17 +89,32 @@ if 'captions' in st.session_state:
     if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
         schedule_datetime = datetime.datetime.combine(post_date, post_time).isoformat()
         
-        # บันทึกลง Database (Supabase)
         try:
-            data = {
-                "product_name": product_name,
-                "content": edited_caption,
-                "image_url": image_url,
-                "schedule_time": schedule_datetime,
-                "status": "pending"
-            }
-            supabase.table("scheduled_posts").insert(data).execute()
-            st.success(f"✅ บันทึกลงคิวเรียบร้อย! ระบบจะโพสต์อัตโนมัติในวันที่ {schedule_datetime}")
-            del st.session_state['captions'] # ล้างค่าหลังบันทึกเสร็จ
+            with st.spinner("กำลังบันทึกข้อมูลและอัปโหลดรูปภาพ..."):
+                # 1. จัดการอัปโหลดรูปภาพ (ถ้ามี)
+                if uploaded_file is not None:
+                    file_bytes = uploaded_file.getvalue()
+                    file_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{uploaded_file.name}"
+                    supabase.storage.from_("product-images").upload(file_name, file_bytes)
+                    image_url = supabase.storage.from_("product-images").get_public_url(file_name)
+                else:
+                    image_url = ""
+                
+                # 2. จัดเตรียมข้อมูลที่จะบันทึก (Data Payload)
+                data_to_insert = {
+                    "product_name": product_name,
+                    "content": edited_caption,
+                    "image_url": image_url,
+                    "schedule_time": schedule_datetime,
+                    "status": "pending"
+                }
+                
+                # 3. คำสั่ง Insert ที่เขียนแบบปลอดภัยและเคลียร์ที่สุด
+                response = supabase.table("scheduled_posts").insert(data_to_insert).execute()
+                
+            st.success("✅ บันทึกลงคิวเรียบร้อย!")
+            if 'captions' in st.session_state:
+                del st.session_state['captions']
+                
         except Exception as e:
-            st.error(f"เกิดข้อผิดพลาด: {e}")
+            st.error(f"❌ เกิดข้อผิดพลาดจากฐานข้อมูล: {e}")
