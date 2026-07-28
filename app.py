@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 from supabase import create_client, Client
 import datetime
 
@@ -36,6 +36,8 @@ if st.button("🔍 ตรวจสอบการเชื่อมต่อ Gem
 model = genai.GenerativeModel('gemini-1.5-flash') # ใช้ 1.5 flash จะเร็วและถูกมาก
 
 # --- 2. ฟังก์ชัน AI สร้างแคปชัน ---
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+
 def generate_captions(product_name, product_link, provider="gemini"):
     prompt = f"""
     คุณคือนักการตลาด Affiliate มืออาชีพ ช่วยเขียนแคปชันขายสินค้าชื่อ: "{product_name}" 
@@ -50,7 +52,11 @@ def generate_captions(product_name, product_link, provider="gemini"):
     ตอบกลับมาโดยแยกหัวข้อชัดเจน
     """
     if provider == "gemini":
-        response = model.generate_content(prompt)
+        # ใช้คำสั่งใหม่ของ google-genai
+        response = client.models.generate_content(
+            model='gemini-2.0-flash', # แนะนำให้ใช้ตัว 2.0-flash ไปเลยครับ เก่งและถูกมาก!
+            contents=prompt,
+        )
         return response.text
     return "API Provider not supported yet."
 
