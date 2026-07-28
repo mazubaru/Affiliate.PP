@@ -2,7 +2,8 @@ import streamlit as st
 import google.generativeai as genai
 from supabase import create_client, Client
 import datetime
-
+from datetime import timezone, timedelta
+TH_TIMEZONE = timezone(timedelta(hours=7))
 # --- 1. ตั้งค่าความปลอดภัย & ระบบ Login ---
 def check_password():
     if "password_correct" not in st.session_state:
@@ -93,17 +94,20 @@ if 'captions' in st.session_state:
     
     # ปุ่มบันทึกลงคิวโพสต์ (ส่งเฉพาะข้อความและลิงก์เข้า Supabase)
     if st.button("🚀 อนุมัติและบันทึกลงคิวโพสต์"):
-        schedule_datetime = datetime.datetime.combine(post_date, post_time).isoformat()
+        # --- แปลงเวลาท้องถิ่น (ไทย GMT+7) ให้เป็น UTC มาตรฐานสากลก่อนบันทึก ---
+        local_dt = datetime.datetime.combine(post_date, post_time).replace(tzinfo=TH_TIMEZONE)
+        utc_dt = local_dt.astimezone(timezone.utc)
+        schedule_datetime = utc_dt.isoformat()
         
         try:
             with st.spinner("กำลังบันทึกข้อมูลลงฐานข้อมูล..."):
                 
-                # ข้อมูลที่จะบันทึกลงตาราง scheduled_posts (ไม่มีรูปภาพ)
+                # ข้อมูลที่จะบันทึกลงตาราง scheduled_posts
                 data_to_insert = {
                     "product_name": product_name,
                     "content": edited_caption,
-                    "image_url": "", # ส่งค่าว่างไว้ก่อน
-                    "schedule_time": schedule_datetime,
+                    "image_url": "", 
+                    "schedule_time": schedule_datetime, # เวลาที่แปลงเป็น UTC แล้ว
                     "status": "pending"
                 }
                 
