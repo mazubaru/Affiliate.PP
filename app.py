@@ -25,7 +25,15 @@ if not check_password():
 # เชื่อมต่อ Supabase และ Gemini จาก st.secrets
 supabase: Client = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model = genai.GenerativeModel('models/gemini-1.5-flash') # ใช้ 1.5 flash จะเร็วและถูกมาก
+if st.button("🔍 ตรวจสอบการเชื่อมต่อ Gemini API"):
+    try:
+        st.write("โมเดลที่คุณสามารถใช้งานได้มีดังนี้:")
+        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        st.write(models)
+        st.success("✅ เชื่อมต่อ API สำเร็จ!")
+    except Exception as e:
+        st.error(f"❌ เชื่อมต่อไม่ได้ Error: {e}")
+model = genai.GenerativeModel('gemini-1.5-flash') # ใช้ 1.5 flash จะเร็วและถูกมาก
 
 # --- 2. ฟังก์ชัน AI สร้างแคปชัน ---
 def generate_captions(product_name, product_link, provider="gemini"):
