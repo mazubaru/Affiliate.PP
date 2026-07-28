@@ -50,9 +50,9 @@ def generate_captions(product_name, product_link, provider="gemini"):
     if provider == "gemini":
         try:
             # ใช้คำสั่ง generate_content แบบใหม่
-            response = client.models.generate_content(
-                model='gemini-1.5-flash'
-                contents=prompt
+            rresponse = client.models.generate_content(
+            model='gemini-1.5-flash', # เปลี่ยนมาใช้ตัวเสถียรสุด
+            contents=prompt
             )
             return response.text
         except Exception as e:
